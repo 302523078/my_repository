@@ -1,4 +1,4 @@
-nux：网络防火墙
+﻿Linux：网络防火墙
 	netfilter: Frame
 	iptables: 数据报文过滤，NAT、mangle等规则生成的工具；
 
