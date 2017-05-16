@@ -1,0 +1,44 @@
+Data Guard : 最大性能，最大可用，最大保护
+数据不丢失
+服务持续可用
+自动的主备切换
+http://oceanbase.org.cn
+
+//打开jvm的debug端口，并且设置编码UTF-8
+-Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,address=6000,server=y,suspend=n -Dfile.encoding=utf-8 
+
+//在生产系统中，推荐打印出垃圾收集日志，开销很小，但能提供很多信息
+-XX:+PrintGCTimestamps -XX:+PrintGCDetails -Xloggc:<fileName>
+-XX:+PrintGCDateStamps
+//JVM异常自动生成堆转储 
+-XX:+HeapDumpOnOutOfMemoryError
+//堆转储文件名
+-XX:HeapDumpPath=
+//JVM GC的类型
+Partial GC：并不收集整个GC堆的模式
+Young GC：只收集young gen的GC
+Old GC：只收集old gen的GC。只有CMS的concurrent collection是这个模式
+Mixed GC：收集整个young gen以及部分old gen的GC。只有G1有这个模式
+Full GC：收集整个堆，包括young gen、old gen、perm gen（如果存在的话）等所有部分的模式。
+Major GC通常是跟full GC是等价的，收集整个GC堆。但因为HotSpot VM发展了这么多年，外界对各种名词的解读已经完全混乱了，当有人说“major GC”的时候一定要问清楚他想要指的是上面的full GC还是old gen
+//JVM GC的触发时机
+young GC：当young gen中的eden区分配满的时候触发。注意young GC中有部分存活对象会晋升到old gen，所以young GC后old gen的占用量通常会有所升高。
+full GC：当准备要触发一次young GC时，如果发现统计数据说之前young GC的平均晋升大小比目前old gen剩余的空间大，则不会触发young GC而是转为触发full GC（因为HotSpot VM的GC里，除了CMS的concurrent collection之外，其它能收集old gen的GC都会同时收集整个GC堆，包括young gen，所以不需要事先触发一次单独的young GC）；或者，如果有perm gen的话，要在perm gen分配空间但已经没有足够空间时，也要触发一次full GC；或者System.gc()、heap dump带GC，默认也是触发full GC。
+
+top shift+h 进程和线程视图之间的切换，shift+f 指定排序列
+//查看gcc/g++默认include路径
+`gcc -print-prog-name=cc1plus` -v
+`g++ -print-prog-name=cc1plus` -v
+
+//事务传播行为
+PROPAGATION_REQUIRED--支持当前事务，如果当前没有事务，就新建一个事务。这是最常见的选择。 
+PROPAGATION_SUPPORTS--支持当前事务，如果当前没有事务，就以非事务方式执行。 
+PROPAGATION_MANDATORY--支持当前事务，如果当前没有事务，就抛出异常。 
+PROPAGATION_REQUIRES_NEW--新建事务，如果当前存在事务，把当前事务挂起。 
+PROPAGATION_NOT_SUPPORTED--以非事务方式执行操作，如果当前存在事务，就把当前事务挂起。
+PROPAGATION_NEVER--以非事务方式执行，如果当前存在事务，则抛出异常。
+PROPAGATION_NESTED 理解Nested的关键是savepoint。他与PROPAGATION_REQUIRES_NEW的区别是，PROPAGATION_REQUIRES_NEW另起一个事务，将会与他的父事务相互独立，而Nested的事务和他的父事务是相依的，他的提交是要等和他的父事务一块提交的。也就是说，如果父事务最后回滚，他也要回滚的。而Nested事务的好处是他有一个savepoint。
+
+iostat -d -k 1 10        #查看TPS和吞吐量信息
+iostat -d -x -k 1 10     #查看设备使用率（%util）、响应时间（await）
+iostat -c 1 10           #查看cpu状态
