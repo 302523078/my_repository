@@ -1,0 +1,49 @@
+cd /xgj/rrslj/rrsck-admin
+svn cleanup
+svn update
+mvn clean install -P test
+
+cd /usr/local/xgj/rrslj-admin/bin/
+#./shutdown.sh
+ps -ef | grep rrslj-admin | grep -v grep | awk '{print $2}' | xargs kill -9
+rm -rf /usr/local/xgj/rrslj-admin/webapps/*
+cp /xgj/rrslj/rrsck-admin/target/rrsck.war /usr/local/xgj/rrslj-admin/webapps
+./startup.sh
+
+
+DATE=`date +%Y%m%d_%H%M`
+cd /xgj/rrslj/truck
+#svn co http://123.59.49.230:8000/svn/1169/rrslj-manager/version2/rrslj-manager-service/truck
+svn cleanup
+svn update
+echo compiling service
+mvn -q clean install -P test
+cp /usr/local/xgj/rrslj-service/job-deploy.tar.gz /usr/local/xgj/rrslj-service/job-deploy.tar.gz.$DATE
+cp /xgj/rrslj/truck/rrsck-app-impl/target/job-deploy.tar.gz /usr/local/xgj/rrslj-service
+
+
+cd /xgj/rrslj/rrsck-app-web
+#svn co http://123.59.49.230:8000/svn/1169/rrslj-manager/version2/rrslj-manager-web/truck/rrsck-app-web
+svn cleanup
+svn update
+echo compiling web
+mvn -q clean install -P test
+cp /usr/local/xgj/rrslj-app/webapps/ROOT.war /usr/local/xgj/rrslj-app/webapps/ROOT.war.$DATE
+cp /xgj/rrslj/rrsck-app-web/target/ROOT.war /usr/local/xgj/rrslj-app/webapps
+
+cd /usr/local/xgj/rrslj-service
+tar xzvf job-deploy.tar.gz
+cd bin
+./restart.sh 
+
+cd /usr/local/xgj/rrslj-app/bin/
+#./shutdown.sh
+ps -ef | grep rrslj-app | grep -v grep | awk '{print $2}' | xargs kill -9
+./startup.sh
+
+
+
+
+
+
+
